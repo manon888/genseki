@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 
 function generateSimpleGiftProfile(responses: Record<string, string>): string {
   // Very lightweight gift profile generation for MVP
@@ -30,6 +31,15 @@ function generateSimpleGiftProfile(responses: Record<string, string>): string {
 
 export async function POST(req: Request) {
   try {
+    // Get session from cookie to associate with user
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
+
     const { responses } = await req.json();
 
     if (!responses) {
@@ -39,12 +49,24 @@ export async function POST(req: Request) {
       );
     }
 
-    // For MVP, userId comes from session/cookie in real app
-    // Here we just return the computed profile
     const giftProfile = generateSimpleGiftProfile(responses);
 
+    // Upsert discovery response (in case they redo it)
+    const discovery = await prisma.discoveryResponse.upsert({
+      where: { user_id: session.userId },
+      update: {
+        responses: JSON.stringify(responses),
+        gift_profile: giftProfile,
+      },
+      create: {
+        user_id: session.userId,
+        responses: JSON.stringify(responses),
+        gift_profile: giftProfile,
+      },
+    });
+
     return NextResponse.json(
-      { message: "Discovery complete", giftProfile },
+      { message: "Discovery complete", giftProfile, discoveryId: discovery.id },
       { status: 200 }
     );
   } catch (err) {

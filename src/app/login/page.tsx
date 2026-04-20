@@ -26,7 +26,10 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    // Get redirect from URL params if present
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect") || "/dashboard";
+    router.push(redirect);
   }
 
   return (

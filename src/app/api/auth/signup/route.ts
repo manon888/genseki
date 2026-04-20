@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
+import { createSession, setSessionCookie } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -31,8 +32,12 @@ export async function POST(req: Request) {
       },
     });
 
+    // Create session and set cookie
+    const token = await createSession({ userId: user.id, name: user.name, email: user.email });
+    await setSessionCookie(token);
+
     return NextResponse.json(
-      { message: "Account created", userId: user.id },
+      { message: "Account created", userId: user.id, name: user.name },
       { status: 201 }
     );
   } catch (err) {
