@@ -86,7 +86,7 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-charcoal/60 mt-6 text-sm">
-          New to SparkFun?{" "}
+          New to Genseki?{" "}
           <Link href="/signup" className="text-primary hover:underline">
             Create an account
           </Link>

@@ -1,33 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-
-function generateSimpleGiftProfile(responses: Record<string, string>): string {
-  // Very lightweight gift profile generation for MVP
-  // Phase 2 will have full AI-powered analysis
-  const total = Object.values(responses).length;
-  const textResponses = Object.values(responses).filter(v => isNaN(Number(v))).length;
-  const scaleResponses = Object.values(responses).filter(v => !isNaN(Number(v))).length;
-
-  // Simple heuristic-based gift suggestions
-  const gifts: string[] = [];
-
-  if (textResponses >= 6) {
-    gifts.push("You naturally see patterns and connections others miss");
-    gifts.push("Your intuition is strong — you often know things before you can explain why");
-  }
-
-  if (scaleResponses >= 3) {
-    gifts.push("You have a grounded sense of self-awareness");
-  }
-
-  if (gifts.length === 0) {
-    gifts.push("You have a unique perspective worth exploring");
-    gifts.push("Your diverse interests are part of your gift");
-  }
-
-  return gifts.join(" | ");
-}
+import { analyzeGensekiProfile } from "@/lib/ollama";
+import { discoveryQuestions } from "@/lib/questions";
 
 export async function POST(req: Request) {
   try {
@@ -49,7 +24,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const giftProfile = generateSimpleGiftProfile(responses);
+    const { analysis, error } = await analyzeGensekiProfile(
+      responses,
+      discoveryQuestions.map((q) => ({ id: q.id, question: q.question, type: q.type }))
+    );
+
+    const giftProfile = analysis;
 
     // Upsert discovery response (in case they redo it)
     const discovery = await prisma.discoveryResponse.upsert({

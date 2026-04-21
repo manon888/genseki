@@ -1,0 +1,76 @@
+const OLLAMA_URL = process.env.OLLAMA_URL || "http://127.0.0.1:11434";
+
+export interface OllamaResult {
+  analysis: string;
+  error?: string;
+}
+
+export async function analyzeGensekiProfile(
+  responses: Record<string, string>,
+  questions: Array<{ id: number; question: string; type: string }>
+): Promise<OllamaResult> {
+  // Build the context from user's responses
+  const responseLines = questions
+    .map((q) => {
+      const answer = responses[q.id];
+      if (answer === undefined) return null;
+      return `Q${q.id} (${q.type}): "${q.question}"\nA: ${answer}`;
+    })
+    .filter(Boolean)
+    .join("\n\n");
+
+  const prompt = `You are Genseki — a warm, insightful guide who helps people discover the unpolished gems inside themselves. You are perceptive, direct, and deeply empathetic.
+
+A user just completed a 10-question discovery journey. Here are their responses:
+
+${responseLines}
+
+Based on their answers, write 3-4 short, personalized gift statements that:
+- Feel like a mentor who really sees them
+- Reference specific things they shared (not generic)
+- Are warm but grounded — not vague praise
+- Capture what makes them uniquely them
+
+Format as a short paragraph or a list — flowing and human, not bullet-pointy.
+
+Be direct and specific. If something in their answers surprises you, say so.`;
+
+  try {
+    const payload = {
+      model: "minimax-m2.7:cloud",
+      prompt,
+      stream: false,
+      options: {
+        temperature: 0.8,
+        num_predict: 400,
+      },
+    };
+
+    const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama responded with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    const analysis = data.response?.trim();
+
+    if (!analysis) {
+      return { analysis: "Your gifts are still coming into focus. Check back soon.", error: "empty" };
+    }
+
+    return { analysis };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("[Genseki Analysis Error]", message);
+    return {
+      analysis: "Your gifts are still coming into focus. Check back soon.",
+      error: message,
+    };
+  }
+}

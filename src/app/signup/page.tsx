@@ -35,7 +35,7 @@ export default function SignupPage() {
     <main className="min-h-screen bg-cream flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-serif text-primary mb-2">Join SparkFun</h1>
+          <h1 className="text-3xl font-serif text-primary mb-2">Join Genseki</h1>
           <p className="text-charcoal/70">Let&apos;s start your journey.</p>
         </div>
 

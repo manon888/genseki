@@ -15,7 +15,9 @@ export default async function DashboardPage() {
   });
 
   const hasDiscovery = discovery?.gift_profile;
-  const gifts = discovery?.gift_profile?.split(" | ") || [];
+  const gifts = discovery?.gift_profile
+    ? discovery.gift_profile.split(/\n\n|\n/).filter(Boolean)
+    : [];
   const responses = discovery?.responses ? JSON.parse(discovery.responses) : null;
 
   return (
@@ -23,7 +25,7 @@ export default async function DashboardPage() {
       <div className="max-w-lg mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-3xl font-serif text-primary mb-2">
-            Your SparkFun, {session.name.split(" ")[0]}
+            Your Genseki, {session.name.split(" ")[0]}
           </h1>
           <p className="text-charcoal/70">Your journey starts here.</p>
         </div>
