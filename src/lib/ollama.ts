@@ -1,67 +1,17 @@
 const OLLAMA_URL = process.env.OLLAMA_URL || "http://127.0.0.1:11434";
 
-// Primary model: nemotron-mini is stable and fast for this use case
-const PRIMARY_MODEL = "nemotron-mini:4b";
-// Fallback if nemotron fails
-const FALLBACK_MODEL = "qwen3.5:latest";
+// minimax-m2.7:cloud works well — longer outputs appear in the `thinking` field
+const MODEL = "minimax-m2.7:cloud";
 
 export interface OllamaResult {
   analysis: string;
   error?: string;
 }
 
-async function callOllama(model: string, prompt: string, timeoutMs = 30000): Promise<{ analysis: string; usedFallback: boolean }> {
-  const payload = {
-    model,
-    prompt,
-    stream: false,
-    options: {
-      temperature: 0.8,
-      num_predict: 500,
-    },
-  };
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(`${OLLAMA_URL}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-
-    if (!response.ok) {
-      throw new Error(`Ollama responded with status ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Try response field first, then thinking field (reasoning models use thinking)
-    let text = (data.response || "").trim();
-    if (!text && data.thinking) {
-      // Reasoning models like minimax write actual content to thinking field
-      text = data.thinking.trim();
-    }
-
-    if (!text) {
-      throw new Error("empty_response");
-    }
-
-    return { analysis: text, usedFallback: model !== PRIMARY_MODEL };
-  } catch (err) {
-    clearTimeout(timer);
-    throw err;
-  }
-}
-
 export async function analyzeGensekiProfile(
   responses: Record<string, string>,
   questions: Array<{ id: number; question: string; type: string }>
 ): Promise<OllamaResult> {
-  // Build the context from user's responses
   const responseLines = questions
     .map((q) => {
       const answer = responses[q.id];
@@ -87,23 +37,52 @@ Format as a short paragraph or a list — flowing and human, not bullet-pointy.
 
 Be direct and specific. If something in their answers surprises you, say so.`;
 
-  // Try primary model first
-  try {
-    const { analysis, usedFallback } = await callOllama(PRIMARY_MODEL, prompt);
-    return { analysis };
-  } catch (primaryErr) {
-    console.warn("[Genseki] Primary model failed, trying fallback:", primaryErr instanceof Error ? primaryErr.message : String(primaryErr));
-  }
+  const payload = {
+    model: MODEL,
+    prompt,
+    stream: false,
+    options: {
+      temperature: 0.8,
+      num_predict: 500,
+    },
+  };
 
-  // Try fallback model
   try {
-    const { analysis } = await callOllama(FALLBACK_MODEL, prompt);
-    return { analysis };
-  } catch (fallbackErr) {
-    console.error("[Genseki] Both models failed:", fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60_000);
+
+    const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (!response.ok) {
+      throw new Error(`Ollama status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // minimax-m2.7:cloud is a reasoning model — on complex prompts it puts
+    // the actual response text in the `thinking` field, not `response`
+    let text = (data.response || "").trim();
+    if (!text && data.thinking) {
+      text = data.thinking.trim();
+    }
+
+    if (!text) {
+      return { analysis: "Your gifts are still coming into focus. Check back soon.", error: "empty" };
+    }
+
+    return { analysis: text };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    console.error("[Genseki] Ollama error:", msg);
     return {
       analysis: "Your gifts are still coming into focus. Check back soon.",
-      error: fallbackErr instanceof Error ? fallbackErr.message : "All models failed",
+      error: msg,
     };
   }
 }
