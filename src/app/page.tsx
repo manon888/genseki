@@ -13,10 +13,10 @@ export default function HomePage() {
             Let&apos;s find it — and put it to work.
           </p>
           <Link
-            href="/signup"
-            className="inline-block bg-accent text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-accent/90 transition-colors"
+            href="/waitlist"
+            className="inline-block bg-accent text-charcoal px-8 py-4 rounded-full text-lg font-medium hover:bg-accent/90 transition-colors shadow-lg shadow-accent/25"
           >
-            Start your discovery
+            Join the Waitlist
           </Link>
         </div>
       </section>
@@ -40,7 +40,7 @@ export default function HomePage() {
           <p className="text-charcoal/70 mb-6">Free to start. No credit card required.</p>
           <Link
             href="/signup"
-            className="text-primary font-medium hover:text-primary/80 transition-colors"
+            className="inline-block text-primary font-medium hover:text-primary/80 transition-colors underline"
           >
             Take the first step →
           </Link>

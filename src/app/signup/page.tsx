@@ -11,9 +11,11 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [whatBroughtYou, setWhatBroughtYou] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setLoading(true);
     setError("");
 
     const res = await fetch("/api/auth/signup", {
@@ -25,6 +27,7 @@ export default function SignupPage() {
     if (!res.ok) {
       const data = await res.json();
       setError(data.error || "Something went wrong");
+      setLoading(false);
       return;
     }
 
@@ -107,9 +110,10 @@ export default function SignupPage() {
 
           <button
             type="submit"
-            className="w-full bg-accent text-white px-6 py-4 rounded-full text-lg font-medium hover:bg-accent/90 transition-colors"
+            disabled={loading}
+            className="w-full bg-accent text-charcoal px-6 py-4 rounded-full text-lg font-medium hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-accent/25"
           >
-            Create account
+            {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
 

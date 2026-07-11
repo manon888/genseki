@@ -7,4 +7,4 @@ if [ -f .env ]; then
 fi
 
 # Run the bot
-python twitter_bot.py
+./venv/bin/python3 twitter_bot.py

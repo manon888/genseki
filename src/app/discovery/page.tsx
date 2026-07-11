@@ -33,11 +33,11 @@ export default function DiscoveryPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ responses }),
       });
-      if (res.ok) {
-        router.push("/dashboard");
-      }
-    } finally {
-      setIsSubmitting(false);
+      // Always redirect to dashboard - even if analysis is still processing
+      router.push("/dashboard");
+    } catch (e) {
+      // On error, still go to dashboard
+      router.push("/dashboard");
     }
   }
 
@@ -110,7 +110,7 @@ function TextInput({ onNext }: { onNext: (v: string) => void }) {
       <button
         onClick={() => value.trim() && onNext(value.trim())}
         disabled={!value.trim()}
-        className="w-full bg-primary text-white px-6 py-4 rounded-full text-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+        className="w-full bg-accent text-charcoal px-6 py-4 rounded-full text-lg font-medium hover:bg-accent/90 transition-colors disabled:opacity-40"
       >
         Continue
       </button>
@@ -165,7 +165,7 @@ function ScaleInput({
       <div className="text-center text-2xl font-medium text-primary">{value}</div>
       <button
         onClick={() => onNext(String(value))}
-        className="w-full bg-primary text-white px-6 py-4 rounded-full text-lg font-medium hover:bg-primary/90 transition-colors"
+        className="w-full bg-accent text-charcoal px-6 py-4 rounded-full text-lg font-medium hover:bg-accent/90 transition-colors"
       >
         Continue
       </button>

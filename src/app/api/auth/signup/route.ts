@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { createSession, setSessionCookie } from "@/lib/auth";
+import { trackEvent } from "@/lib/analytics";
+import { onSignup } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, whatBroughtYou } = await req.json();
+    const { email, password, name } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -28,13 +30,21 @@ export async function POST(req: Request) {
       data: {
         name,
         email,
-        password: hashed,
+        password_hash: hashed,
       },
     });
 
     // Create session and set cookie
     const token = await createSession({ userId: user.id, name: user.name, email: user.email });
     await setSessionCookie(token);
+
+    // Track analytics
+    trackEvent("signup", { userId: user.id });
+
+    // Send welcome email (fire-and-forget)
+    onSignup(user.email, user.name).catch(err => {
+      console.error("[Email] Failed to send welcome:", err);
+    });
 
     return NextResponse.json(
       { message: "Account created", userId: user.id, name: user.name },

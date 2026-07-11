@@ -1,7 +1,7 @@
 const OLLAMA_URL = process.env.OLLAMA_URL || "http://127.0.0.1:11434";
 
-// minimax-m2.7:cloud works well — longer outputs appear in the `thinking` field
-const MODEL = "minimax-m2.7:cloud";
+// minimax-m2.5:cloud works well
+const MODEL = "minimax-m2.5:cloud";
 
 export interface OllamaResult {
   analysis: string;
@@ -12,14 +12,18 @@ export async function analyzeGensekiProfile(
   responses: Record<string, string>,
   questions: Array<{ id: number; question: string; type: string }>
 ): Promise<OllamaResult> {
+  // Map responses - frontend sends "q1", "q2" but questions have numeric ids 1, 2, 3...
   const responseLines = questions
     .map((q) => {
-      const answer = responses[q.id];
-      if (answer === undefined) return null;
-      return `Q${q.id} (${q.type}): "${q.question}"\nA: ${answer}`;
+      // Try both "q1" (string) and 1 (numeric) keys
+      const answer = responses[`q${q.id}`] || responses[q.id] || responses[q.id.toString()];
+      if (!answer) return null;
+      return `Q${q.id}. ${q.question}\nA: ${answer}`;
     })
     .filter(Boolean)
     .join("\n\n");
+
+  console.log("[Genseki] Analyzing responses:\n", responseLines);
 
   const prompt = `You are Genseki — a warm, insightful guide who helps people discover the unpolished gems inside themselves. You are perceptive, direct, and deeply empathetic.
 
@@ -49,7 +53,7 @@ Be direct and specific. If something in their answers surprises you, say so.`;
 
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 60_000);
+    const timer = setTimeout(() => controller.abort(), 30_000);
 
     const response = await fetch(`${OLLAMA_URL}/api/generate`, {
       method: "POST",

@@ -1,0 +1,8 @@
+# EMAIL_AUTH_READY
+Email & Auth completion plan stored in:
+- EMAIL_AUTH_IMPLEMENTATION_PLAN.md (quick reference)
+- EMAIL_AUTH_COMPLETION_PROMPT.md (detailed guide)
+
+Project: Genseki
+Status: Ready to implement email verification & password reset
+Priority: High - Completes production-ready auth system

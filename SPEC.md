@@ -1,6 +1,6 @@
-# SPEC.md — SparkFun
+# SPEC.md — Genseki
 
-> *spark.fun — You have something powerful inside you. Let's find it and put it to work.*
+> *Genseki — You have something powerful inside you. Let's find it and put it to work.*
 
 ---
 

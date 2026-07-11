@@ -9,9 +9,11 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setLoading(true);
     setError("");
 
     const res = await fetch("/api/auth/login", {
@@ -23,10 +25,10 @@ export default function LoginPage() {
     if (!res.ok) {
       const data = await res.json();
       setError(data.error || "Invalid credentials");
+      setLoading(false);
       return;
     }
 
-    // Get redirect from URL params if present
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get("redirect") || "/dashboard";
     router.push(redirect);
@@ -79,9 +81,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full bg-primary text-white px-6 py-4 rounded-full text-lg font-medium hover:bg-primary/90 transition-colors"
+            disabled={loading}
+            className="w-full bg-accent text-charcoal px-6 py-4 rounded-full text-lg font-medium hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-accent/25"
           >
-            Sign in
+            {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 

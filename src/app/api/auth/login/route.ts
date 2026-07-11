@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const valid = await compare(password, user.password);
+    const valid = await compare(password, user.password_hash);
     if (!valid) {
       return NextResponse.json(
         { error: "Invalid credentials" },

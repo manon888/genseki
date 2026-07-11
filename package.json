@@ -1,5 +1,5 @@
 {
-  "name": "sparkfun",
+  "name": "genseki",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,11 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@x402/fetch": "^2.17.0",
+    "agentmail": "^0.5.14",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.2",
     "next": "16.2.3",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "resend": "^6.16.0"
   },
   "devDependencies": {
     "@prisma/client": "^5.22.0",

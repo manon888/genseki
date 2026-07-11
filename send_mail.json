@@ -1,0 +1,18 @@
+{
+  "using": [
+    "urn:ietf:params:jmap:core",
+    "urn:ietf:params:jmap:mail",
+    "urn:ietf:params:jmap:submission"
+  ],
+  "methodCalls": [
+    ["Email/send", {
+      "accountId": "$ACCOUNT_ID",
+      "email": {
+        "from": { "name": "Genseki", "email": "hello@genseki.atomicmail.ai" },
+        "to": [{ "name": "$TO", "email": "$TO" }],
+        "subject": "$SUBJECT",
+        "textBody": "$BODY"
+      }
+    }, "m0"]
+  ]
+}

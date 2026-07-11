@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import AnalysisChecker from "./AnalysisChecker";
+import GiftDisplay from "./GiftDisplay";
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -14,7 +16,8 @@ export default async function DashboardPage() {
     where: { user_id: session.userId },
   });
 
-  const hasDiscovery = discovery?.gift_profile;
+  const hasDiscovery = discovery?.gift_profile && !discovery.gift_profile.includes("Analyzing");
+  const isAnalyzing = discovery?.gift_profile === "Analyzing your gifts...";
   const gifts = discovery?.gift_profile
     ? discovery.gift_profile.split(/\n\n|\n/).filter(Boolean)
     : [];
@@ -31,32 +34,10 @@ export default async function DashboardPage() {
         </div>
 
         {hasDiscovery ? (
+          <GiftDisplay gifts={gifts} userName={session.name} />
+        ) : isAnalyzing ? (
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-charcoal/10">
-            <div className="text-center mb-8">
-              <div className="text-4xl mb-4">✨</div>
-              <h2 className="text-xl font-serif text-primary mb-2">Your gifts</h2>
-              <p className="text-charcoal/70 text-sm">
-                Here&apos;s what we found in your discovery journey.
-              </p>
-            </div>
-
-            <div className="space-y-4 mb-8">
-              {gifts.map((gift, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <span className="text-accent mt-1">✦</span>
-                  <p className="text-charcoal/80">{gift}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="border-t border-charcoal/10 pt-6">
-              <Link
-                href="/discovery"
-                className="block w-full text-center text-primary font-medium hover:text-primary/80 transition-colors py-3"
-              >
-                Replay the discovery journey
-              </Link>
-            </div>
+            <AnalysisChecker />
           </div>
         ) : (
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-charcoal/10">
@@ -71,7 +52,7 @@ export default async function DashboardPage() {
             <div className="border-t border-charcoal/10 pt-6">
               <Link
                 href="/discovery"
-                className="block w-full bg-accent text-white px-6 py-4 rounded-full text-center font-medium hover:bg-accent/90 transition-colors"
+                className="block w-full bg-accent text-charcoal px-6 py-4 rounded-full text-center font-medium hover:bg-accent/90 transition-colors shadow-lg shadow-accent/25"
               >
                 Take the discovery journey →
               </Link>
@@ -80,12 +61,26 @@ export default async function DashboardPage() {
         )}
 
         <div className="flex items-center justify-between mt-8">
-          <Link
-            href="/"
-            className="text-sm text-charcoal/50 hover:text-charcoal/70 transition-colors"
-          >
-            ← Back to home
-          </Link>
+          <div className="flex gap-4">
+            <Link
+              href="/dashboard"
+              className="text-sm text-charcoal/50 hover:text-charcoal/70 transition-colors"
+            >
+              ← Dashboard
+            </Link>
+            <Link
+              href="/profile"
+              className="text-sm text-charcoal/50 hover:text-charcoal/70 transition-colors"
+            >
+              Profile
+            </Link>
+            <Link
+              href="/stats"
+              className="text-sm text-charcoal/50 hover:text-charcoal/70 transition-colors"
+            >
+              Stats
+            </Link>
+          </div>
           <form action="/api/auth/logout" method="POST">
             <button
               type="submit"

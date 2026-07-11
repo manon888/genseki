@@ -8,14 +8,14 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String
-  password    String
-  wallet_address String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  discovery_response DiscoveryResponse?
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String
+  password_hash   String   @default("") // Required for migration - should be set on signup
+  notification_email String? // Optional email for notifications
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  discovery       DiscoveryResponse?
 }
 
 model DiscoveryResponse {
@@ -26,4 +26,20 @@ model DiscoveryResponse {
   gift_profile String? // Computed gift profile result
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model Analytics {
+  id          String   @id @default(cuid())
+  event       String   // signup, discovery_started, discovery_completed, ai_success, ai_failed
+  user_id     String?  // optional - for user-specific events
+  metadata    String?  // optional - JSON for extra data
+  created_at  DateTime @default(now())
+}
+
+model Waitlist {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  position    Int      // waitlist position
+  source      String?  // where they heard about us (optional)
+  created_at  DateTime @default(now())
 }
